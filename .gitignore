@@ -35,15 +35,12 @@ venv/
 *.tmp
 
 test_results/
-ref_docs/
-temp/
 *.pdf
 *.wav
 *.mp3
 !README.md
 *.txt
-ref_docs/neurips_sections.md
-ref_docs/system_status_report.md
+
 
 # Dataset
 Datasets/
