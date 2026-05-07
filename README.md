@@ -1,0 +1,99 @@
+# DopplerSim: A Physics-Based Simulator for Vehicle Audio Modeling
+
+This repository contains the official code, datasets, and evaluation baseline for the NeurIPS 2026 double-blind submission: **"Dynamic Audio Motion Understanding: Benchmarking Physical Motion Inference from Sound"**.
+
+## Overview
+
+Understanding how sound-emitting objects move through space is a fundamental but underdeveloped problem in machine learning. While audio research has made substantial progress on event classification, source separation, and speech modeling, comparatively little work has addressed whether models can infer physically meaningful motion properties, such as speed, direction, trajectory, acceleration, or multi-object interaction, from sound alone. 
+
+This repository introduces **DopplerSim**, a physics-based simulation framework designed to generate realistic, dynamic vehicle pass-by audio with explicit kinematic control over Doppler shift, trajectory, propagation delay, and distance-dependent attenuation. To support controlled evaluation, we introduce **Dynamic Audio Motion Understanding (DAMU)**, a benchmark suite of ten foundational tasks spanning regression, classification, sequence labeling, and structured prediction.
+
+By training models with a mixture of real and simulated audio, we demonstrate substantial improvements in generalization to real-world recordings, addressing the persistent sim-to-real gap.
+
+## Repository Structure
+
+To keep the project organized and modular, the codebase is divided into three primary submodules. Below is an overview of the root directory and the expected data structure:
+
+```text
+root/
+├── Datasets/
+│   ├── CustomWhiteboardPath/
+│   ├── Benchmarks(Noise)/
+│   ├── Benchmarks/
+│   ├── SimulatedData/
+│   ├── ExtendedSimulatedData/
+│   └── RealData/
+├── Vehicle-Speed-from-Audio-SE-ResNet/
+├── DopplerSim/
+├── .gitignore
+├── README.md
+├── croissant.json
+└── requirements.txt
+```
+
+Please refer to their respective `README.md` files for detailed setup and usage instructions.
+
+* **[`DopplerSim/`](DopplerSim/)**: The core physics-consistent acoustic simulator. It transforms stationary source recordings into physically accurate pass-by audio along arbitrary planar trajectories. This module contains the simulation pipeline, web interface, and the code to generate the Benchmark Suite (B1-B10).
+* **[`Vehicle-Speed-from-Audio-SE-ResNet/`](Vehicle-Speed-from-Audio-SE-ResNet/)**: The deep learning baseline model (SE-ResNet). This directory contains the training and evaluation framework used to estimate vehicle speed. It includes tools for 10-fold cross-validation, batch inference, and model checkpoint management.
+* **[`Datasets/`](https://drive.google.com/drive/u/7/folders/1zbNvCbslQmNU0BWAEvimxQB6TMwM8mHi)**: The comprehensive collection of acoustic data used in our experiments and evaluations. It houses real-world field recordings (`RealData`), physically matched synthetic counterparts (`SimulatedData`), and diverse speed-augmented simulations (`ExtendedSimulatedData`). Furthermore, the repository includes the DAMU Benchmark Suite datasets (`Benchmarks`), comprising 10 structured motion-understanding evaluation tasks spanning speed estimation, trajectory analysis, temporal forecasting, multi-object interaction, and motion-aware source identification, along with their noise-augmented robustness counterparts (`Benchmarks(Noise)`). It also contains `CustomWhiteboardPath` examples, which demonstrate an interactive freeform trajectory simulation in which arbitrary hand-drawn vehicle paths are converted into physically grounded acoustic pass-by renderings and synchronized visualizations.
+
+
+## The DAMU Benchmark Suite
+
+The DAMU benchmark suite decomposes acoustic motion understanding into three capability families:
+1. **Scalar and Geometric Kinematic Estimation**: Tests the inference of interpretable quantities from structured waveform changes (e.g., Speed Estimation, Distance-of-Closest-Approach Estimation, Acceleration/Deceleration Estimation).
+2. **Categorical and Sequential Motion Understanding**: Evaluates the classification of motion sign, shape, and evolution (e.g., Direction-of-Travel Classification, Trajectory Shape Classification, Time-to-Event Prediction, Motion State Segmentation).
+3. **Scene-level and Source-level Reasoning**: Assesses models on multi-source interactions and separation of identity from motion (e.g., Multi-Object Motion Disentanglement, Crossing and Interaction Event Classification, Source Identity Under Motion Variation).
+
+## Experiments and Results
+
+Our evaluation validates the physical consistency of the simulator and its practical utility for downstream machine learning tasks, specifically vehicle speed estimation.
+
+### Experiment 1: Real vs. Simulated Clip Comparison
+
+We evaluated the signal-level alignment between 192 real field recordings (from the VS13 dataset) and their matched synthetic counterparts generated by DopplerSim. The comparison uses three metrics combined into an overall score:
+
+$$S_{\text{overall}} = 0.55\, S_{\text{spec}} + 0.30\, S_{\text{amp}} + 0.15\, S_{\text{env}}$$
+
+* **Envelope Correlation ($S_{\text{env}}$ = 77.68 ± 14.48%):** Demonstrates strong but variable temporal alignment across pairs. The simulator reliably captures the approach–pass–recede loudness dynamics driven by Doppler shift and geometric attenuation, though the relatively high standard deviation reflects clip-to-clip variation in pass-by duration and microphone placement. This metric evaluates the Pearson correlation between max-normalized RMS envelopes.
+
+* **Spectral Overlap ($S_{\text{spec}}$ = 65.40 ± 5.46%):** Exhibits moderate but notably stable agreement across all 192 pairs, as indicated by the low standard deviation. The simulator preserves dominant frequency structures while broadband tire, road, and aerodynamic components in real recordings introduce a consistent spectral offset not fully recovered by warping a stationary source. This metric calculates the histogram intersection between time-averaged STFT magnitudes.
+
+* **Amplitude Overlap ($S_{\text{amp}}$):** Evaluates the framewise overlap between normalized RMS envelopes, capturing moment-to-moment amplitude agreement beyond the correlation-based envelope metric.
+
+* **Overall Match Score (63.98 ± 4.42%):** The low standard deviation here reflects the compositing effect of the weighted combination — clip-to-clip variance in envelope correlation is partially absorbed by the more stable spectral overlap term, yielding a consistent overall score across pairs. The mean reflects the balance between strong temporal fidelity and remaining spectral mismatch inherent to physics-based synthesis from stationary source recordings.
+
+### Experiment 2: SE-ResNet Speed Regression on VS13
+To isolate the effects of data conditions on model generalization, we evaluated an SE-ResNet speed regression model across a 3x3 cross-dataset inference grid. 
+
+**Cross-Dataset Inference RMSE (km/h):**
+
+| Source Dataset | `RealData_Model` | `SimulatedData_Model` | `MixedData_Model` |
+| :--- | :--- | :--- | :--- |
+| **RealData** | 11.25 | 27.88 | **6.84** |
+| **SimulatedData** | 23.04 | 17.50 | 20.26 |
+| **MixedData** | 11.87 | 27.96 | 8.99 |
+
+**Key Findings:**
+1. **Sim-to-Real Transfer:** Training with a mixture of real and synthetic audio (`MixedData_Model`) substantially improves performance on held-out real recordings (`RealData` source) compared to real-only training, **reducing RMSE from 11.25 to 6.84 km/h**. This represents a 39% error reduction, suggesting that physically grounded synthesis provides motion-consistent variation beyond what is available in the limited real-only training set.
+2. **Complementary Variation:** The simulator introduces physically grounded acoustic variation that expands the effective training distribution. Unlike mere gain or noise perturbations, DopplerSim changes the trajectory-driven time-frequency structure of the event.
+
+*For technical instructions on reproducing these evaluations, please see the [Evaluation Walkthrough](Vehicle-Speed-from-Audio-SE-ResNet/reference_docs/vs13_evaluation_walkthrough.md) located in the SE-ResNet directory.*
+
+## Reproducibility and Code Availability
+All resources required to reproduce the experiments in this work are provided within this repository. To maintain double-blind integrity, this version of the repository has been fully anonymized.
+
+**Installation Note:** You only need to install the unified dependencies from the root directory by running `pip install -r requirements.txt` once. You do not need to reinstall dependencies when navigating into the `DopplerSim` or `Vehicle-Speed-from-Audio-SE-ResNet` subfolders.
+
+1. Navigate to `DopplerSim/` to generate or inspect synthetic acoustic data.
+2. Navigate to `Vehicle-Speed-from-Audio-SE-ResNet/` to train or evaluate models on the provided datasets.
+3. Review `Datasets/` to understand the data composition.
+
+---
+
+## Publication Reference
+
+This codebase supports the following research paper:
+
+**Dynamic Audio Motion Understanding: Benchmarking Physical Motion Inference from Sound**  
+*Submitted for NeurIPS 2026 (Evaluations and Datasets Track)*

@@ -1,0 +1,88 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+venv/
+
+# TensorFlow
+*.keras
+*.h5
+*.ckpt
+*.pb
+
+# Logs and debug
+*.log
+*.csv
+*.xlsx
+*.tmp
+
+test_results/
+ref_docs/
+temp/
+*.pdf
+*.wav
+*.mp3
+!README.md
+*.txt
+ref_docs/neurips_sections.md
+ref_docs/system_status_report.md
+
+# Dataset
+Datasets/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Checkpoints 
+# Vehicle-Speed-from-Audio-SE-ResNet/checkpoints/*_model/
+
+#  Version Control Rules 
+
+# 1. Exclude all results from Vehicle-Speed-from-Audio-SE-ResNet
+Vehicle-Speed-from-Audio-SE-ResNet/results/
+
+# 2. Exclude all generated results/outputs from DopplerSim
+DopplerSim/static/batch_outputs/
+DopplerSim/static/spectrograms/
+DopplerSim/outputs/
+DopplerSim/graphs/
+DopplerSim/**/*.csv
+DopplerSim/**/*.png
+!DopplerSim/UI.png
+DopplerSim/**/*.wav
+DopplerSim/**/*.mp3
+
+# 3. Allow sounds for simulation
+!DopplerSim/static/drone_sounds/
+!DopplerSim/static/drone_sounds/*.wav
+!DopplerSim/static/drone_sounds/*.mp3
+!DopplerSim/static/vehicle_sounds/
+!DopplerSim/static/vehicle_sounds/*.wav
+!DopplerSim/static/vehicle_sounds/*.mp3
+
+# 4. Exclude metadata files for both submodules
+*metadata*.json
+metadata.json
+
+# 5. Explicitly track dataset metadata
+!croissant.json
+
