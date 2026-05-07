@@ -71,7 +71,7 @@ To reproduce the training process or train on new simulated datasets generated b
 ```bash
 python main.py --data_dir /path/to/dataset
 ```
-For a step-by-step guide on training on our experimental data partitions (**RealData**, **ExtendedSimulatedData**, and **SimulatedData**), see [reference_docs/training_walkthrough.md](../reference_docs/training_walkthrough.md).
+For a step-by-step guide on training on our experimental data partitions (**RealData**, **ExtendedSimulatedData**, and **SimulatedData**), see [reference_docs/training_walkthrough.md](reference_docs/training_walkthrough.md).
 
 ## Evaluation Experiments & Results
 
